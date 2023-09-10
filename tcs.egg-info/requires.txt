@@ -1,0 +1,5 @@
+gymnasium
+pygame
+stable-baselines3
+torch
+keyboard
