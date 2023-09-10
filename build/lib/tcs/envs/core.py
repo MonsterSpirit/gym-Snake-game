@@ -190,7 +190,7 @@ class TcsV2Env(gym.Env):
         self.WINDOW_BLACK = (0, 0, 0)
 
     def get_action_meanings(self):
-        return ['up', 'down', 'left', 'right']
+        return [0, 1, 2, 3]
 
     def step(self, action: Any) -> tuple[Any, SupportsFloat, bool, bool, dict[str, Any]]:
         info = {}
