@@ -123,6 +123,12 @@ class SnakeBody:
         self.generate()
         pass
 
+    def getHead(self):
+        return self.body[0]
+    
+    def length(self):
+        return len(self.body)
+
     def setAction(self, action):
         if action == 0:
             return
@@ -183,13 +189,15 @@ class TcsV2Env(gym.Env):
         self.height = kwargs.get("height", 50)
         self.width = kwargs.get("width", 50)
         self.action_space = gym.spaces.Discrete(5)
-        self.observation_space = gym.spaces.Box(
-            low=0, high=255, shape=(self.height, self.width, 3), dtype=np.uint8)
         self.windowcolor = [(0, 0, 0), (255, 255, 255), (255, 0, 0),
                             (0, 0, 255), (0, 255, 0)]
         self.WINDOW_WIDTH = (self.width + 2) * 10
         self.WINDOW_HEIGHT = (self.height + 2) * 10
         self.WINDOW_BLACK = (0, 0, 0)
+        self.obs_type = kwargs.get("obs_type", "rgb")
+        if self.obs_type == "rgb":
+            self.observation_space = gym.spaces.Box(
+            low=0, high=255, shape=(self.height, self.width, 3), dtype=np.uint8)
 
     def get_action_meanings(self):
         return ["NOOP", "UP", "DOWN", "LEFT", "RIGHT"]
@@ -222,27 +230,36 @@ class TcsV2Env(gym.Env):
         if reward < 0:
             reward = 0
         self.score += reward
-        observation = self.snakeEnv.getEnvironmentalData()
-        return self.dataConversionImage(observation), reward, done, False, info
+        observation = self.environmentalData()
+        return observation, reward, done, False, info
 
     def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None) -> tuple[Any, dict[str, Any]]:
         self.snakeEnv = SnakeEnv(self.height, self.width)
         self.wall = Wall(self.snakeEnv)
         self.snakebody = SnakeBody(self.snakeEnv)
         self.food = Food(self.snakeEnv, seed=seed)
-        observation = self.snakeEnv.getEnvironmentalData()
+        observation = self.environmentalData()
         self.score = 0
         self.distanceFood = 20
-        return self.dataConversionImage(observation), {}
+        return observation, {}
 
-    def dataConversionImage(self, observation: list[list]):
-        result = [[[] for _ in range(len(observation[0]))]
-                  for _ in range(len(observation))]
-        for y in range(len(observation)):
-            for x in range(len(observation[y])):
-                a, b, c = self.windowcolor[observation[y][x]]
-                result[y][x] = [a, b, c]
-        return np.array(result, dtype=np.uint8)
+    def environmentalData(self):
+        if self.obs_type == "rgb":
+            observation = self.snakeEnv.getEnvironmentalData()
+            result = [[[] for _ in range(len(observation[0]))]
+                    for _ in range(len(observation))]
+            for y in range(len(observation)):
+                for x in range(len(observation[y])):
+                    a, b, c = self.windowcolor[observation[y][x]]
+                    result[y][x] = [a, b, c]
+            return np.array(result, dtype=np.uint8)
+        elif self.obs_type == "data":
+            hy, hx = self.snakebody.getHead()
+            fy, fx = self.food.getFoodCoordinates()
+            hl = self.snakebody.length()
+            observation = [hy ,hx, fy, fx, hl]
+            return observation
+        return {}
 
     def render(self):
         if "window" not in self.__dict__ or self.window == None:
