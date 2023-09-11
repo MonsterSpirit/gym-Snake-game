@@ -105,10 +105,10 @@ class Food:
 
 class SnakeBody:
 
-    UP = 0
-    DOWN = 1
-    LEFT = 2
-    RIGHT = 3
+    UP = 1
+    DOWN = 2
+    LEFT = 3
+    RIGHT = 4
 
     def __init__(self, snakeEnv: SnakeEnv) -> None:
         self.snakeEnv = snakeEnv
@@ -116,14 +116,16 @@ class SnakeBody:
         self.body_value = 4
         # 长度
         self.len = 1
-        # 方向: 0上 1下 2左 3右
-        self.movingDirection = 0
+        # 移动方向
+        self.movingDirection = 1
         self.body = [(int(snakeEnv.height / 2), int(snakeEnv.width / 2))]
         self.end = ()
         self.generate()
         pass
 
     def setAction(self, action):
+        if action == 0:
+            return
         self.movingDirection = action
 
     def lengthen(self):
@@ -180,7 +182,7 @@ class TcsV2Env(gym.Env):
         super().__init__()
         self.height = kwargs.get("height", 50)
         self.width = kwargs.get("width", 50)
-        self.action_space = gym.spaces.Discrete(4)
+        self.action_space = gym.spaces.Discrete(5)
         self.observation_space = gym.spaces.Box(
             low=0, high=255, shape=(self.height, self.width, 3), dtype=np.uint8)
         self.windowcolor = [(0, 0, 0), (255, 255, 255), (255, 0, 0),
@@ -190,7 +192,7 @@ class TcsV2Env(gym.Env):
         self.WINDOW_BLACK = (0, 0, 0)
 
     def get_action_meanings(self):
-        return [0, 1, 2, 3]
+        return ["NOOP", "UP", "DOWN", "LEFT", "RIGHT"]
 
     def step(self, action: Any) -> tuple[Any, SupportsFloat, bool, bool, dict[str, Any]]:
         info = {}
