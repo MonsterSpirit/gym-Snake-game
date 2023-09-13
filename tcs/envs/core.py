@@ -198,6 +198,8 @@ class TcsV2Env(gym.Env):
         if self.obs_type == "rgb":
             self.observation_space = gym.spaces.Box(
             low=0, high=255, shape=(self.height, self.width, 3), dtype=np.uint8)
+        if self.obs_type == "data":
+            self.observation_space = gym.spaces.Box(low=0, high=255, shape=(9,), dtype=np.uint8)
 
     def get_action_meanings(self):
         return ["NOOP", "UP", "DOWN", "LEFT", "RIGHT"]
