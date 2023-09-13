@@ -125,7 +125,7 @@ class SnakeBody:
 
     def getHead(self):
         return self.body[0]
-    
+
     def length(self):
         return len(self.body)
 
@@ -197,9 +197,10 @@ class TcsV2Env(gym.Env):
         self.obs_type = kwargs.get("obs_type", "rgb")
         if self.obs_type == "rgb":
             self.observation_space = gym.spaces.Box(
-            low=0, high=255, shape=(self.height, self.width, 3), dtype=np.uint8)
+                low=0, high=255, shape=(self.height, self.width, 3), dtype=np.uint8)
         if self.obs_type == "data":
-            self.observation_space = gym.spaces.Box(low=0, high=255, shape=(9,), dtype=np.uint8)
+            self.observation_space = gym.spaces.Box(
+                low=0, high=255, shape=(9,), dtype=np.uint8)
 
     def get_action_meanings(self):
         return ["NOOP", "UP", "DOWN", "LEFT", "RIGHT"]
@@ -249,7 +250,7 @@ class TcsV2Env(gym.Env):
         if self.obs_type == "rgb":
             observation = self.snakeEnv.getEnvironmentalData()
             result = [[[] for _ in range(len(observation[0]))]
-                    for _ in range(len(observation))]
+                      for _ in range(len(observation))]
             for y in range(len(observation)):
                 for x in range(len(observation[y])):
                     a, b, c = self.windowcolor[observation[y][x]]
@@ -259,7 +260,7 @@ class TcsV2Env(gym.Env):
             hy, hx = self.snakebody.getHead()
             fy, fx = self.food.getFoodCoordinates()
             hl = self.snakebody.length()
-            observation = [hy ,hx, fy, fx, hl]
+            observation = [hy, hx, fy, fx, hl]
             return observation
         return {}
 
