@@ -254,7 +254,7 @@ class TcsV2Env(gym.Env):
             for y in range(len(observation)):
                 for x in range(len(observation[y])):
                     a, b, c = self.windowcolor[observation[y][x]]
-                    result[y][x] = [a, b, c]
+                    result[y][x] = (a, b, c)
             return np.array(result, dtype=np.uint8)
         elif self.obs_type == "data":
             hy, hx = self.snakebody.getHead()
