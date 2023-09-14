@@ -332,7 +332,7 @@ class ConstructEnv:
 
 
 if __name__ == "__main__":
-    env = ConstructEnv().getEnv()
+    env = ConstructEnv().getEnv(render_mode="human")
     env.reset()
     clock = pygame.time.Clock()
     action = 0
