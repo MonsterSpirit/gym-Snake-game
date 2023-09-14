@@ -184,8 +184,9 @@ class SnakeBody:
 
 class TcsV2Env(gym.Env):
 
+    metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
+
     def __init__(self, **kwargs) -> None:
-        super().__init__()
         self.height = kwargs.get("height", 50)
         self.width = kwargs.get("width", 50)
         self.action_space = gym.spaces.Discrete(5)
@@ -201,7 +202,9 @@ class TcsV2Env(gym.Env):
         if self.obs_type == "data":
             self.observation_space = gym.spaces.Box(
                 low=0, high=255, shape=(9,), dtype=np.uint8)
-        self.render_mode = kwargs.get("render_mode", "rgb_array")
+        self.render_mode = kwargs.get("render_mode", None)
+        assert self.render_mode is None or self.render_mode in self.metadata["render_modes"]
+        super().__init__()
 
     def get_action_meanings(self):
         return ["NOOP", "UP", "DOWN", "LEFT", "RIGHT"]
@@ -266,26 +269,41 @@ class TcsV2Env(gym.Env):
         return {}
 
     def render(self):
-        if "window" not in self.__dict__ or self.window == None:
-            pygame.init()
-            self.window = pygame.display.set_mode(
-                (self.WINDOW_WIDTH, self.WINDOW_HEIGHT))
-            pygame.display.set_caption("tcs")
-        self.window.fill(self.WINDOW_BLACK)
-        observation = self.snakeEnv.getEnvironmentalData()
-        for y in range(len(observation)):
-            for x in range(len(observation[y])):
-                value = observation[y][x]
-                if value == 0:
-                    continue
-                pygame.draw.rect(
-                    self.window, self.windowcolor[value], (x * 10 + 10, y * 10 + 10, 10, 10))
-        event = pygame.event.poll()
-        pygame.display.flip()
-        # pygame.display.update()
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            exit()
+        if self.render_mode == "human" or self.render_mode == "None":
+            if "window" not in self.__dict__ or self.window == None:
+                pygame.init()
+                self.window = pygame.display.set_mode(
+                    (self.WINDOW_WIDTH, self.WINDOW_HEIGHT))
+                pygame.display.set_caption("tcs")
+            self.window.fill(self.WINDOW_BLACK)
+            observation = self.snakeEnv.getEnvironmentalData()
+            for y in range(len(observation)):
+                for x in range(len(observation[y])):
+                    value = observation[y][x]
+                    if value == 0:
+                        continue
+                    pygame.draw.rect(
+                        self.window, self.windowcolor[value], (x * 10 + 10, y * 10 + 10, 10, 10))
+            event = pygame.event.poll()
+            pygame.display.flip()
+            # pygame.display.update()
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+
+        elif self.render_mode == "rgb_array":
+            observation = self.snakeEnv.getEnvironmentalData()
+            result = [[[] for _ in range(len(observation[0]))]
+                      for _ in range(len(observation))]
+            for y in range(len(observation)):
+                for x in range(len(observation[y])):
+                    value = observation[y][x]
+                    a, b, c = self.windowcolor[value]
+                    result[y][x] = [a, b, c]
+
+            return np.array(result, dtype=np.uint8)
+
+        return None
 
     def close(self):
         del self.snakebody
