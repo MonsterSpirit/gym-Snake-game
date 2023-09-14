@@ -201,6 +201,7 @@ class TcsV2Env(gym.Env):
         if self.obs_type == "data":
             self.observation_space = gym.spaces.Box(
                 low=0, high=255, shape=(9,), dtype=np.uint8)
+        self.render_mode = kwargs.get("render_mode", "rgb_array")
 
     def get_action_meanings(self):
         return ["NOOP", "UP", "DOWN", "LEFT", "RIGHT"]
