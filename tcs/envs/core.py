@@ -9,6 +9,7 @@ import numpy
 import gymnasium as gym
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecEnv
 from gymnasium.wrappers import TimeLimit
+import cv2
 
 
 class SnakeEnv:
@@ -102,6 +103,11 @@ class Food:
         vy, vx = self.foodCoordinates
         return vy == y and vx == x
 
+    def rendering(self):
+        if len(self.foodCoordinates) == 2:
+            y, x = self.foodCoordinates
+            self.snakeEnv.setValue(y, x, self.value)
+
 
 class SnakeBody:
 
@@ -132,12 +138,16 @@ class SnakeBody:
     def setAction(self, action):
         if action == 0:
             return
+        if (action % 2 == 0 and action - 1 == self.movingDirection) or \
+                (action % 1 == 0 and action + 1 == self.movingDirection):
+            return
         self.movingDirection = action
 
     def lengthen(self):
         if len(self.end) == 2:
             y, x = self.end
             self.body.append((y, x))
+            self.snakeEnv.setValue(y, x, self.body_value)
             self.end = ()
 
     def move(self):
@@ -151,7 +161,7 @@ class SnakeBody:
         elif self.movingDirection == SnakeBody.RIGHT:
             x += 1
         else:
-            return (y, x)
+            raise RuntimeError(f"异常 move : {self.movingDirection}")
         self.body.insert(0, (y, x))
         ey, ex = self.body.pop()
         self.end = (ey, ex)
@@ -203,6 +213,7 @@ class TcsV2Env(gym.Env):
             self.observation_space = gym.spaces.Box(
                 low=0, high=255, shape=(9,), dtype=np.uint8)
         self.render_mode = kwargs.get("render_mode", None)
+        self.mp4 = kwargs.get("mp4", False)
         assert self.render_mode is None or self.render_mode in self.metadata["render_modes"]
         super().__init__()
 
@@ -283,6 +294,9 @@ class TcsV2Env(gym.Env):
                     continue
                 pygame.draw.rect(
                     self.canvas, self.windowcolor[value], (x * 10 + 10, y * 10 + 10, 10, 10))
+        result = np.transpose(
+            np.array(pygame.surfarray.pixels3d(self.canvas)), axes=(1, 0, 2)
+        )
         if self.render_mode == "human":
             self.window.blit(self.canvas, self.canvas.get_rect())
             # 清理事件
@@ -294,9 +308,15 @@ class TcsV2Env(gym.Env):
             # if event.type == pygame.QUIT:
             #     pygame.quit()
             #     exit()
-        return np.transpose(
-            np.array(pygame.surfarray.pixels3d(self.canvas)), axes=(1, 0, 2)
-        )
+            if self.mp4:
+                if "outMp4" not in self.__dict__ or self.outMp4 == None:
+                    height, width, _ = result.shape
+                    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+                    self.outMp4 = cv2.VideoWriter(
+                        "1.mp4", fourcc, 30, (width, height))
+                self.outMp4.write(result)
+
+        return result
 
     def close(self):
         del self.snakebody
@@ -304,6 +324,8 @@ class TcsV2Env(gym.Env):
         del self.food
         del self.snakeEnv
         del self.score
+        if self.mp4:
+            self.outMp4.release()
         return super().close()
 
 
