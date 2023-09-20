@@ -91,9 +91,13 @@ class Food:
             y, x = self.foodCoordinates
             self.snakeEnv.setNull(y, x)
         emptyPosition = self.snakeEnv.getDesignationValue(0)
-        assert len(emptyPosition) > 1, f"emptyPosition < 1, value = {len(emptyPosition)}"
-        ri = random.randint(0, len(emptyPosition) - 1)
-        y, x = emptyPosition[ri]
+        lenEmptyPosition = len(emptyPosition)
+        assert lenEmptyPosition > 0, f"emptyPosition必须 > 0, value = {lenEmptyPosition}"
+        if lenEmptyPosition == 1:
+            y, x = emptyPosition[0]
+        else:
+            ri = random.randint(0, len(emptyPosition) - 1)
+            y, x = emptyPosition[ri]
         self.foodCoordinates = (y, x)
         self.snakeEnv.setValue(y, x, self.value)
 
