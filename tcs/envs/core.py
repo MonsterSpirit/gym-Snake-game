@@ -92,7 +92,9 @@ class Food:
             self.snakeEnv.setNull(y, x)
         emptyPosition = self.snakeEnv.getDesignationValue(0)
         lenEmptyPosition = len(emptyPosition)
-        assert lenEmptyPosition > 0, f"emptyPosition必须 > 0, value = {lenEmptyPosition}"
+        if lenEmptyPosition <= 0:
+            print("奇迹般的, emptyPosition 为空")
+            return True
         if lenEmptyPosition == 1:
             y, x = emptyPosition[0]
         else:
@@ -100,6 +102,7 @@ class Food:
             y, x = emptyPosition[ri]
         self.foodCoordinates = (y, x)
         self.snakeEnv.setValue(y, x, self.value)
+        return False
 
     def getFoodCoordinates(self):
         return self.foodCoordinates
@@ -250,7 +253,9 @@ class TcsV2Env(gym.Env):
             info["message"] = "碰撞到墙壁"
         if self.food.isFood(y, x):
             self.snakebody.lengthen()
-            self.food.generate()
+            if self.food.generate():
+                done = True
+                reward += 100
             reward += 1
             self.distanceFood = 20
         else:
