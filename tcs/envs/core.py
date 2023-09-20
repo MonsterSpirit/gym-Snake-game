@@ -93,7 +93,6 @@ class Food:
         emptyPosition = self.snakeEnv.getDesignationValue(0)
         lenEmptyPosition = len(emptyPosition)
         if lenEmptyPosition <= 0:
-            print("奇迹般的, emptyPosition 为空")
             return True
         if lenEmptyPosition == 1:
             y, x = emptyPosition[0]
@@ -256,6 +255,7 @@ class TcsV2Env(gym.Env):
             if self.food.generate():
                 done = True
                 reward += 100
+                info["message"] = "神TM吃满屏了"
             reward += 1
             self.distanceFood = 20
         else:
