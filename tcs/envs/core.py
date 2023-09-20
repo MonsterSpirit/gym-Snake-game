@@ -197,18 +197,26 @@ class TcsV2Env(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
 
     def __init__(self, **kwargs) -> None:
+        self.image_size = kwargs.get("image_size", 10)
+        self.show = False
         self.height = kwargs.get("height", 50)
         self.width = kwargs.get("width", 50)
-        self.action_space = gym.spaces.Discrete(5)
         self.windowcolor = [(0, 0, 0), (255, 255, 255), (255, 0, 0),
                             (0, 0, 255), (0, 255, 0)]
-        self.WINDOW_WIDTH = (self.width + 2) * 10
-        self.WINDOW_HEIGHT = (self.height + 2) * 10
+        self.WINDOW_WIDTH = self.width * self.image_size
+        self.WINDOW_HEIGHT = self.height * self.image_size
         self.WINDOW_BLACK = (0, 0, 0)
         self.obs_type = kwargs.get("obs_type", "rgb")
+        self.outputType = kwargs.get("outputType", "Discrete")
+        if self.outputType == "Discrete":
+            self.action_space = gym.spaces.Discrete(5)
+        elif self.outputType == "Box":
+            self.action_space = gym.spaces.Box(
+                low=0, high=4, shape=(1,), dtype=np.uint8
+            )
         if self.obs_type == "rgb":
             self.observation_space = gym.spaces.Box(
-                low=0, high=255, shape=(self.height * 10 + 20, self.width * 10 + 20, 3), dtype=np.uint8)
+                low=0, high=255, shape=(self.height * self.image_size, self.width * self.image_size, 3), dtype=np.uint8)
         if self.obs_type == "data":
             self.observation_space = gym.spaces.Box(
                 low=0, high=255, shape=(9,), dtype=np.uint8)
@@ -221,6 +229,9 @@ class TcsV2Env(gym.Env):
         return ["NOOP", "UP", "DOWN", "LEFT", "RIGHT"]
 
     def step(self, action: Any) -> tuple[Any, SupportsFloat, bool, bool, dict[str, Any]]:
+        if isinstance(action, np.ndarray):
+            action = action[0]
+            action = round(action)
         info = {}
         reward = 0
         self.snakebody.setAction(action)
@@ -277,14 +288,21 @@ class TcsV2Env(gym.Env):
         if (self.render_mode == "human") and ("window" not in self.__dict__ or self.window == None):
             pygame.init()
             self.window = pygame.display.set_mode(
-                (self.WINDOW_WIDTH, self.WINDOW_HEIGHT))
+                (self.width * 10, self.height * 10))
             pygame.display.set_caption("tcs")
             self.window.fill(self.WINDOW_BLACK)
+            self.show = True
         # 创建一个画板
         if "canvas" not in self.__dict__ or self.canvas == None:
             self.canvas = pygame.Surface(
                 (self.WINDOW_WIDTH, self.WINDOW_HEIGHT))
+        if self.show and ("canvasN" not in self.__dict__ or self.canvasN == None):
+            self.canvasN = pygame.Surface(
+                (self.width * 10, self.height * 10)
+            )
         self.canvas.fill(self.WINDOW_BLACK)
+        if self.show:
+            self.canvasN.fill(self.WINDOW_BLACK)
 
         observation = self.snakeEnv.getEnvironmentalData()
         for y in range(len(observation)):
@@ -293,12 +311,20 @@ class TcsV2Env(gym.Env):
                 if value == 0:
                     continue
                 pygame.draw.rect(
-                    self.canvas, self.windowcolor[value], (x * 10 + 10, y * 10 + 10, 10, 10))
+                    self.canvas, self.windowcolor[value], (x * self.image_size, y * self.image_size, self.image_size, self.image_size))
+                if self.show:
+                    pygame.draw.rect(
+                        self.canvasN, self.windowcolor[value], (
+                            x * 10, y * 10, 10, 10)
+                    )
         result = np.transpose(
             np.array(pygame.surfarray.pixels3d(self.canvas)), axes=(1, 0, 2)
         )
         if self.render_mode == "human":
-            self.window.blit(self.canvas, self.canvas.get_rect())
+            show_image = np.transpose(
+                np.array(pygame.surfarray.pixels3d(self.canvasN)), axes=(1, 0, 2)
+            )
+            self.window.blit(self.canvasN, self.canvasN.get_rect())
             # 清理事件
             pygame.event.pump()
             pygame.display.update()
@@ -310,11 +336,11 @@ class TcsV2Env(gym.Env):
             #     exit()
             if self.mp4:
                 if "outMp4" not in self.__dict__ or self.outMp4 == None:
-                    height, width, _ = result.shape
+                    height, width, _ = show_image.shape
                     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
                     self.outMp4 = cv2.VideoWriter(
                         "1.mp4", fourcc, 30, (width, height))
-                self.outMp4.write(result)
+                self.outMp4.write(show_image)
 
         return result
 
