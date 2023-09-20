@@ -255,7 +255,10 @@ class TcsV2Env(gym.Env):
             self.snakebody.lengthen()
             if self.food.generate():
                 done = True
-                reward += 100
+                vn_step = 1000 - self.num_step
+                if vn_step < 0:
+                    vn_step = 0
+                reward += 100 * (vn_step / 1000)
                 info["message"] = "神TM吃满屏了"
                 if self.show:
                     time.sleep(3)
@@ -273,6 +276,7 @@ class TcsV2Env(gym.Env):
             reward = 0
         self.score += reward
         observation = self.environmentalData()
+        self.num_step += 1
         return observation, reward, done, False, info
 
     def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None) -> tuple[Any, dict[str, Any]]:
@@ -282,6 +286,7 @@ class TcsV2Env(gym.Env):
         self.food = Food(self.snakeEnv, seed=seed)
         observation = self.environmentalData()
         self.score = 0
+        self.num_step = 0
         self.distanceFood = 20
         return observation, {}
 
