@@ -229,6 +229,7 @@ class TcsV2Env(gym.Env):
                 low=0, high=255, shape=(9,), dtype=np.uint8)
         self.render_mode = kwargs.get("render_mode", None)
         self.mp4 = kwargs.get("mp4", False)
+        self.mp4fps = kwargs.get("mp4fps", 30)
         assert self.render_mode is None or self.render_mode in self.metadata["render_modes"]
         super().__init__()
 
@@ -256,6 +257,8 @@ class TcsV2Env(gym.Env):
                 done = True
                 reward += 100
                 info["message"] = "神TM吃满屏了"
+                if self.show:
+                    time.sleep(3)
             reward += 1
             self.distanceFood = 20
         else:
@@ -349,7 +352,7 @@ class TcsV2Env(gym.Env):
                     height, width, _ = show_image.shape
                     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
                     self.outMp4 = cv2.VideoWriter(
-                        "1.mp4", fourcc, 30, (width, height))
+                        "1.mp4", fourcc, self.mp4fps, (width, height))
                 self.outMp4.write(show_image)
 
         return result
