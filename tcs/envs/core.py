@@ -136,6 +136,9 @@ class SnakeBody:
         self.generate()
         pass
 
+    def getBody(self):
+        return self.body
+
     def getHead(self):
         return self.body[0]
 
@@ -209,7 +212,7 @@ class TcsV2Env(gym.Env):
         self.height = kwargs.get("height", 50)
         self.width = kwargs.get("width", 50)
         self.windowcolor = [(0, 0, 0), (255, 255, 255), (255, 0, 0),
-                            (0, 0, 255), (0, 255, 0)]
+                            (0, 0, 255), None]
         self.WINDOW_WIDTH = self.width * self.image_size
         self.WINDOW_HEIGHT = self.height * self.image_size
         self.WINDOW_BLACK = (0, 0, 0)
@@ -326,7 +329,7 @@ class TcsV2Env(gym.Env):
         for y in range(len(observation)):
             for x in range(len(observation[y])):
                 value = observation[y][x]
-                if value == 0:
+                if value == 0 or self.windowcolor[value] == None:
                     continue
                 pygame.draw.rect(
                     self.canvas, self.windowcolor[value], (x * self.image_size, y * self.image_size, self.image_size, self.image_size))
@@ -335,6 +338,27 @@ class TcsV2Env(gym.Env):
                         self.canvasN, self.windowcolor[value], (
                             x * 10, y * 10, 10, 10)
                     )
+        body = self.snakebody.getBody()
+        bodylen = len(body)
+        if bodylen > 1:
+            colosNm = round(155 / (bodylen - 1))
+            dcolosNm = 100 + colosNm
+            for i in range(bodylen - 1, 0, -1):
+                y, x = body[i]
+                vvColos = (0, dcolosNm, 0)
+                pygame.draw.rect(
+                    self.canvas, vvColos, (x * self.image_size, y * self.image_size, self.image_size, self.image_size))
+                if self.show:
+                    pygame.draw.rect(
+                        self.canvasN, vvColos, (
+                            x * 10, y * 10, 10, 10)
+                    )
+                if dcolosNm >= 255:
+                    continue
+                dcolosNm += colosNm
+                if dcolosNm > 255:
+                    dcolosNm = 255
+
         result = np.transpose(
             np.array(pygame.surfarray.pixels3d(self.canvas)), axes=(1, 0, 2)
         )
