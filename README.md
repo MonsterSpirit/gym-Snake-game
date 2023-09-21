@@ -1,4 +1,4 @@
-# 贪吃色环境
+# 贪吃蛇环境
 
 ## 安装
 
@@ -22,7 +22,28 @@ envs = make_vec_env("tcs-v2", env_kwargs={
     )
 ```
 
-<video controls width="400" height="300">
-  <source src="./demo.mp4" type="video/mp4">
-  <p>Your browser does not support the video tag.</p>
-</video>
+## 训练曲线图
+
+![demo](./image/1695369157894.jpg)
+
+## 演示
+
+![demo](./image/output.gif)
+
+## 加载模型
+
+```python
+envs = make_vec_env("tcs-v2", env_kwargs={
+    "height": 8,
+    "width": 8,
+    "render_mode": "human",
+    "mp4": True,
+    "image_size": 15,
+    "mp4fps": 30,
+}, n_envs=1,
+    seed=999,
+)
+
+model = PPO.load("./model/v6.zip", envs)
+```
+
