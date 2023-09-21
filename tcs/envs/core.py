@@ -266,15 +266,15 @@ class TcsV2Env(gym.Env):
                 if self.show:
                     time.sleep(3)
             reward += 1
-            self.distanceFood = 20
-        else:
-            fy, fx = self.food.getFoodCoordinates()
-            jy = abs(fy - y)
-            jx = abs(fx - x)
-            distance = jy + jx
-            if distance < self.distanceFood:
-                self.distanceFood = distance
-                reward += 1 - ((1 / 20) * distance)
+            # self.distanceFood = 20
+        # else:
+        #     fy, fx = self.food.getFoodCoordinates()
+        #     jy = abs(fy - y)
+        #     jx = abs(fx - x)
+        #     distance = jy + jx
+        #     if distance < self.distanceFood:
+        #         self.distanceFood = distance
+        #         reward += 1 - ((1 / 20) * distance)
         if reward < 0:
             reward = 0
         self.score += reward
@@ -290,7 +290,7 @@ class TcsV2Env(gym.Env):
         observation = self.environmentalData()
         self.score = 0
         self.num_step = 0
-        self.distanceFood = 20
+        # self.distanceFood = 20
         return observation, {}
 
     def environmentalData(self):
@@ -341,9 +341,9 @@ class TcsV2Env(gym.Env):
         body = self.snakebody.getBody()
         bodylen = len(body)
         if bodylen > 1:
-            colosNm = round(155 / (bodylen - 1))
-            dcolosNm = 100 + colosNm
-            for i in range(bodylen - 1, 0, -1):
+            colosNm = round(105 / (bodylen - 1))
+            dcolosNm = 150 + colosNm
+            for i in range(bodylen - 2, 0, -1):
                 y, x = body[i]
                 vvColos = (0, dcolosNm, 0)
                 pygame.draw.rect(
@@ -358,6 +358,15 @@ class TcsV2Env(gym.Env):
                 dcolosNm += colosNm
                 if dcolosNm > 255:
                     dcolosNm = 255
+            y, x = body[-1]
+            vbcolos = (232, 255, 1)
+            pygame.draw.rect(
+                self.canvas, vbcolos, (x * self.image_size, y * self.image_size, self.image_size, self.image_size))
+            if self.show:
+                pygame.draw.rect(
+                    self.canvasN, vbcolos, (
+                        x * 10, y * 10, 10, 10)
+                )
 
         result = np.transpose(
             np.array(pygame.surfarray.pixels3d(self.canvas)), axes=(1, 0, 2)
