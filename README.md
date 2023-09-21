@@ -11,6 +11,8 @@ bash build.sh
 
 ## 使用
 ```python
+from stable_baselines3.common.env_util import make_vec_env
+
 envs = make_vec_env("tcs-v2", env_kwargs={
         "height": 8, # 高
         "width": 8,  # 宽
@@ -33,6 +35,10 @@ envs = make_vec_env("tcs-v2", env_kwargs={
 ## 加载模型
 
 ```python
+from stable_baselines3.common.env_util import make_vec_env
+from stable_baselines3 import *
+
+
 envs = make_vec_env("tcs-v2", env_kwargs={
     "height": 8,
     "width": 8,
